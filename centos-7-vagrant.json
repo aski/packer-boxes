@@ -1,0 +1,28 @@
+{
+    "builders" : [
+        {
+            "type": "virtualbox-ovf",
+            "source_path": "build/centos-7-minimal.ovf",
+            "ssh_username": "root",
+            "ssh_password": "root",
+            "shutdown_command": "/sbin/halt -h -p"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "scripts": [
+                "scripts/vagrant.sh",
+                "scripts/virtualbox.sh",
+                "scripts/cleanup.sh"
+            ]
+        }
+    ],
+    "post-processors": [
+        {
+            "type": "vagrant",
+            "compression_level": 9,
+            "output": "build/{{.BuildName}}_{{.Provider}}.box"
+        }
+    ]
+}
