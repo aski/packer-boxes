@@ -16,17 +16,22 @@ do
     fi
 done
 
-echo "==> Rebuild rpm deb and delete cache"
-rm -rf /var/cache/yum
-rm -rf /var/lib/rpm/__*
-rpmdb --rebuilddb -v -v
+echo "==> Remove rescue kernel"
+rm -f /boot/initramfs*rescue*
+rm -r /boot/vmlinuz-0-rescue-*
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
+echo "==> Remove old kernels"
+yum install -y -q yum-utils
+package-cleanup --oldkernels --count=1 -y -q
 
 echo "==> Clear yum cache"
 yum -y clean all
+rm -rf /var/cache/yum
 
-echo "==> Remove old kernels"
-# freezing the system?
-#package-cleanup --oldkernels --count=1
+echo "==> Rebuild rpm deb and delete cache"
+rm -rf /var/lib/rpm/__*
+rpmdb --rebuilddb -v -v
 
 echo "==> Remove all files from /root"
 rm -rf /root/*
@@ -58,7 +63,11 @@ if [ "x${swapuuid}" != "x" ]; then
     /sbin/mkswap -U "${swapuuid}" "${swappart}"
 fi
 
-echo "==> Zero all blank space"
+echo "==> Zero all blank space on /boot"
+dd if=/dev/zero of=/boot/EMPTY bs=1M | true
+rm -f /boot/EMPTY
+
+echo "==> Zero all blank space on /"
 dd if=/dev/zero of=/EMPTY bs=1M | true
 rm -f /EMPTY
 
